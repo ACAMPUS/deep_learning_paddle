@@ -1,2 +1,4 @@
 /data/housing.data
 /data/mnist.json.gz
+/minst/mnist
+/minst/mnist.pdparams
