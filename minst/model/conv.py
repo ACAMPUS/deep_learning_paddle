@@ -22,7 +22,7 @@ class MNIST(paddle.nn.Layer):
 
     # 定义网络前向计算过程，卷积后紧接着使用池化层，最后使用全连接层计算最终输出
     # 卷积层激活函数使用Relu，全连接层不使用激活函数
-    def forward(self, inputs):
+    def forward(self, inputs,label):
         x = self.conv1(inputs)
         x = F.relu(x)
         x = self.max_pool1(x)
@@ -31,4 +31,8 @@ class MNIST(paddle.nn.Layer):
         x = self.max_pool2(x)
         x = paddle.reshape(x, [x.shape[0], -1])
         x = self.fc(x)
-        return x
+        if label is not None:
+            acc = paddle.metric.accuracy(input=x, label=label)
+            return x, acc
+        else:
+            return x

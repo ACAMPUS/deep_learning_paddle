@@ -13,7 +13,9 @@ data_loader = paddle.io.DataLoader(train_dataset, batch_size=100, shuffle=True)
 
 
 def train(model):
-    model = MNIST()
+    # 开启GPU
+    use_gpu = True
+    paddle.set_device('gpu:0') if use_gpu else paddle.set_device('cpu')
     model.train()
     opt = paddle.optimizer.SGD(learning_rate=0.001, parameters=model.parameters())
     EPOCH_NUM = 10
@@ -24,7 +26,7 @@ def train(model):
             labels = paddle.to_tensor(labels)
 
             # 前向计算的过程
-            predicts = model(images)
+            predicts, acc = model(images, labels)
 
             # 计算损失，取一个批次样本损失的平均值
             loss = F.cross_entropy(predicts, labels)
@@ -32,7 +34,7 @@ def train(model):
 
             # 每训练了200批次的数据，打印下当前Loss的情况
             if batch_id % 200 == 0:
-                print("epoch: {}, batch: {}, loss is: {}".format(epoch_id, batch_id, avg_loss.numpy()))
+                print("epoch: {}, batch: {}, loss is: {}, acc is {}".format(epoch_id, batch_id, avg_loss.numpy(), acc.numpy()))
 
             # 后向传播，更新参数的过程
             avg_loss.backward()
