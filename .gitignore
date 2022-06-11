@@ -2,3 +2,4 @@
 /data/mnist.json.gz
 /minst/mnist
 /minst/mnist.pdparams
+/*.pyc
