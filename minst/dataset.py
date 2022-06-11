@@ -9,6 +9,8 @@ import numpy as np
 class MnistDataset(paddle.io.Dataset):
     def __init__(self, mode):
         datafile = '../data/mnist.json.gz'
+        self.IMG_ROWS=28
+        self.IMG_COLS=28
         data = json.load(gzip.open(datafile))
         # 读取到的数据区分训练集，验证集，测试集
         train_set, val_set, eval_set = data
@@ -41,8 +43,8 @@ class MnistDataset(paddle.io.Dataset):
         # img = np.array(self.imgs[idx]).astype('float32')
         # label = np.array(self.labels[idx]).astype('float32')
         # 卷积网络
-        img = np.array(self.imgs[idx]).astype('float32').reshape([1,28,28])
-        label = np.array(self.labels[idx]).astype('float32').reshape([1])
+        img = np.reshape(self.imgs[idx], [1, self.IMG_ROWS, self.IMG_COLS]).astype('float32')
+        label = np.reshape(self.labels[idx], [1]).astype('int64')
 
         return img, label
 

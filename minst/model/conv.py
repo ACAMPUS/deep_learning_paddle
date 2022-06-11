@@ -18,7 +18,7 @@ class MNIST(paddle.nn.Layer):
         # 定义池化层，池化核的大小kernel_size为2，池化步长为2
         self.max_pool2 = MaxPool2D(kernel_size=2, stride=2)
         # 定义一层全连接层，输出维度是1
-        self.fc = Linear(in_features=980, out_features=1)
+        self.fc = Linear(in_features=980, out_features=10)
 
     # 定义网络前向计算过程，卷积后紧接着使用池化层，最后使用全连接层计算最终输出
     # 卷积层激活函数使用Relu，全连接层不使用激活函数
