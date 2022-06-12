@@ -7,6 +7,10 @@ from matplotlib import pyplot as plt
 from minst.dataset import MnistDataset
 # from minst.model.two_fc import MNIST
 from minst.model.conv import MNIST
+#引入VisualDL库，并设定保存作图数据的文件位置
+from visualdl import LogWriter
+log_writer = LogWriter(logdir="./log")
+
 
 train_dataset = MnistDataset(mode='train')
 # 使用paddle.io.DataLoader 定义DataLoader对象用于加载Python生成器产生的数据，
@@ -21,16 +25,16 @@ def train(model):
     model.train()
 
     # 四种优化算法的设置方案，可以逐一尝试效果
+    # 各种优化算法均可以加入正则化项，避免过拟合，参数regularization_coeff调节正则化项的权重
     # opt = paddle.optimizer.SGD(learning_rate=0.01, parameters=model.parameters())
     # opt = paddle.optimizer.Momentum(learning_rate=0.01, momentum=0.9, parameters=model.parameters())
-    opt = paddle.optimizer.Adagrad(learning_rate=0.01, parameters=model.parameters())
+    # 为所有参数加上统一的正则化项
+    opt = paddle.optimizer.Adagrad(learning_rate=0.01, weight_decay=paddle.regularizer.L2Decay(coeff=1e-5),parameters=model.parameters())
     # opt = paddle.optimizer.Adam(learning_rate=0.01, parameters=model.parameters())
     # opt = paddle.optimizer.SGD(learning_rate=0.001, parameters=model.parameters())
 
     EPOCH_NUM = 10
     iter = 0
-    iters = []
-    losses = []
     for epoch_id in range(EPOCH_NUM):
         for batch_id, data in enumerate(data_loader()):
             images, labels = data
@@ -47,8 +51,8 @@ def train(model):
             # 每训练了200批次的数据，打印下当前Loss的情况
             if batch_id % 100 == 0:
                 print("epoch: {}, batch: {}, loss is: {}, acc is {}".format(epoch_id, batch_id, avg_loss.numpy(), acc.numpy()))
-                iters.append(iter)
-                losses.append(avg_loss.numpy())
+                log_writer.add_scalar(tag='acc', step=iter, value=acc.numpy())
+                log_writer.add_scalar(tag='loss', step=iter, value=avg_loss.numpy())
                 iter+=100
             # 后向传播，更新参数的过程
             avg_loss.backward()
@@ -57,17 +61,8 @@ def train(model):
 
     # 保存模型参数
     paddle.save(model.state_dict(), 'mnist')
-    return iters, losses, opt
 
 # 创建模型
 model = MNIST()
 # 启动训练过程
-iters, losses, opt = train(model)
-
-plt.figure()
-plt.title(f"train loss for {opt.type}", fontsize=24)
-plt.xlabel("iter", fontsize=14)
-plt.ylabel("loss", fontsize=14)
-plt.plot(iters, losses,color='red',label='train loss')
-plt.grid()
-plt.show()
+train(model)
