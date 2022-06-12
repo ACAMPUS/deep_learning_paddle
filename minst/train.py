@@ -2,6 +2,8 @@
 # 声明数据加载函数，使用训练模式，MnistDataset构建的迭代器每次迭代只返回batch=1的数据
 import paddle
 import paddle.nn.functional as F
+from matplotlib import pyplot as plt
+
 from minst.dataset import MnistDataset
 # from minst.model.two_fc import MNIST
 from minst.model.conv import MNIST
@@ -17,8 +19,18 @@ def train(model):
     use_gpu = True
     paddle.set_device('gpu:0') if use_gpu else paddle.set_device('cpu')
     model.train()
-    opt = paddle.optimizer.SGD(learning_rate=0.001, parameters=model.parameters())
+
+    # 四种优化算法的设置方案，可以逐一尝试效果
+    # opt = paddle.optimizer.SGD(learning_rate=0.01, parameters=model.parameters())
+    # opt = paddle.optimizer.Momentum(learning_rate=0.01, momentum=0.9, parameters=model.parameters())
+    opt = paddle.optimizer.Adagrad(learning_rate=0.01, parameters=model.parameters())
+    # opt = paddle.optimizer.Adam(learning_rate=0.01, parameters=model.parameters())
+    # opt = paddle.optimizer.SGD(learning_rate=0.001, parameters=model.parameters())
+
     EPOCH_NUM = 10
+    iter = 0
+    iters = []
+    losses = []
     for epoch_id in range(EPOCH_NUM):
         for batch_id, data in enumerate(data_loader()):
             images, labels = data
@@ -33,9 +45,11 @@ def train(model):
             avg_loss = paddle.mean(loss)
 
             # 每训练了200批次的数据，打印下当前Loss的情况
-            if batch_id % 200 == 0:
+            if batch_id % 100 == 0:
                 print("epoch: {}, batch: {}, loss is: {}, acc is {}".format(epoch_id, batch_id, avg_loss.numpy(), acc.numpy()))
-
+                iters.append(iter)
+                losses.append(avg_loss.numpy())
+                iter+=100
             # 后向传播，更新参数的过程
             avg_loss.backward()
             opt.step()
@@ -43,9 +57,17 @@ def train(model):
 
     # 保存模型参数
     paddle.save(model.state_dict(), 'mnist')
-
+    return iters, losses, opt
 
 # 创建模型
 model = MNIST()
 # 启动训练过程
-train(model)
+iters, losses, opt = train(model)
+
+plt.figure()
+plt.title(f"train loss for {opt.type}", fontsize=24)
+plt.xlabel("iter", fontsize=14)
+plt.ylabel("loss", fontsize=14)
+plt.plot(iters, losses,color='red',label='train loss')
+plt.grid()
+plt.show()
